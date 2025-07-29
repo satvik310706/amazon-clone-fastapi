@@ -1,5 +1,6 @@
 from database import cart_collection, order_collection, product_collection
 from bson import ObjectId
+from bson.errors import InvalidId
 from datetime import datetime
 from fastapi import HTTPException
 
@@ -30,13 +31,14 @@ async def place_order(user_id: str):
             "item_total": item_total,
             "dealer_id": product.get("created_by")  # ✅ Add dealer_id from product
         })
-
     order = {
-        "user_id": user_id,
-        "items": order_items,
-        "total_price": total_price,
-        "created_at": datetime.utcnow()
-    }
+    "user_id": user_id,
+    "items": order_items,
+    "total_amount": total_price,  # changed from total_price
+    "status": "Pending",          # ensure it's always added
+    "order_date": datetime.utcnow()  # changed from created_at
+}
+
 
     result = await order_collection.insert_one(order)
     await cart_collection.delete_many({"user_id": user_id})  # clear cart
