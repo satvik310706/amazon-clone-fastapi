@@ -45,6 +45,7 @@ async def get_cart(user=Depends(get_current_user)):
                 "title": product["title"],
                 "price": product["price"],
                 "quantity": item["quantity"],
+                "product_id": str(product["_id"]),
                 "subtotal": product["price"] * item["quantity"]
             }
             total += item_info["subtotal"]
