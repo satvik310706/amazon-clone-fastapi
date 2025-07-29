@@ -39,7 +39,7 @@ async def get_all_orders(user=Depends(get_current_user)):
 class StatusUpdate(BaseModel):
     status: str
 
-@router.put("/orders/{order_id}/status")
+@router.put("/{order_id}/status")
 async def update_order_status(order_id: str, data: StatusUpdate, user=Depends(get_current_user)):
     # Step 1: Validate ObjectId
     try:
