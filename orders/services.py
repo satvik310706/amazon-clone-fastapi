@@ -14,9 +14,12 @@ async def place_order(user_id: str):
     total_price = 0
 
     for item in cart_items:
-        # ✅ Fetch the product info using product_id
-        product = await product_collection.find_one({"_id": ObjectId(item["product_id"])})
+        try:
+            product_id = ObjectId(item["product_id"])
+        except (InvalidId, KeyError, TypeError):
+            continue  # Skip if product_id is invalid or missing
 
+        product = await product_collection.find_one({"_id": product_id})
         if not product:
             continue  # skip if product not found
 
@@ -24,12 +27,12 @@ async def place_order(user_id: str):
         total_price += item_total
 
         order_items.append({
-            "product_id": str(item["product_id"]),
+            "product_id": str(product_id),
             "title": product["title"],
             "price": product["price"],
             "quantity": item["quantity"],
             "item_total": item_total,
-            "dealer_id": product.get("created_by")  # ✅ Add dealer_id from product
+            "dealer_id": product.get("created_by")
         })
     order = {
     "user_id": user_id,
