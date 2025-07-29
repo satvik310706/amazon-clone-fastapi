@@ -4,7 +4,7 @@ from database import cart_collection, product_collection
 from dependencies.auth_dep import get_current_user
 from bson import ObjectId
 from tasks import cart_reminder_task
-
+from bson.errors import InvalidId  # add at top
 router = APIRouter()
 
 @router.post("/add")
@@ -35,22 +35,31 @@ async def add_to_cart(item: CartItemModel, user=Depends(get_current_user)):
 
 @router.get("/")
 async def get_cart(user=Depends(get_current_user)):
-    cart_items = await cart_collection.find({"user_id": user["id"]}).to_list(None)
-    results = []
-    total = 0
-    for item in cart_items:
-        product = await product_collection.find_one({"_id": ObjectId(item["product_id"])})
-        if product:
-            item_info = {
-                "title": product["title"],
-                "price": product["price"],
-                "quantity": item["quantity"],
-                "product_id": str(product["_id"]),
-                "subtotal": product["price"] * item["quantity"]
-            }
-            total += item_info["subtotal"]
-            results.append(item_info)
-    return {"cart": results, "total_price": total}
+    try:
+        cart_items = await cart_collection.find({"user_id": user["id"]}).to_list(None)
+        results = []
+        total = 0
+        for item in cart_items:
+            try:
+                product = await product_collection.find_one({"_id": ObjectId(item["product_id"])})
+            except InvalidId:
+                continue  # skip if product_id is invalid
+
+            if product:
+                item_info = {
+                    "title": product["title"],
+                    "price": product["price"],
+                    "quantity": item["quantity"],
+                    "product_id": str(product["_id"]),
+                    "subtotal": product["price"] * item["quantity"]
+                }
+                total += item_info["subtotal"]
+                results.append(item_info)
+        return {"cart": results, "total_price": total}
+    
+    except Exception as e:
+        print("Error in get_cart:", e)
+        raise HTTPException(status_code=500, detail="Failed to fetch cart items")
 
 @router.delete("/{product_id}")
 async def remove_from_cart(product_id: str, user=Depends(get_current_user)):
