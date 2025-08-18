@@ -26,4 +26,4 @@ class UserUpdate(BaseModel):
     username: Optional[str]
     password: Optional[str]
     address: Optional[str]
-    phone: Optional[str] = Field("0000000000", min_length=10, max_length=10)
+    phone: Optional[str] = Field(None, min_length=10, max_length=10)

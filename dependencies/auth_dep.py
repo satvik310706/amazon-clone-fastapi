@@ -13,7 +13,6 @@ def serialize_user(user):
         "email": user["email"],
         "role": user["role"]
     }
-
 async def get_current_user(request: Request):
     token = request.headers.get("Authorization")
     if not token or not token.startswith("Bearer "):
